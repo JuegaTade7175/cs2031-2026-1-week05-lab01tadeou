@@ -16,16 +16,22 @@ public class OrderDetailController {
     private final OrderDetailService service;
 
     @GetMapping
-    ResponseEntity<List<OrderDetail>> list() {
-        return ResponseEntity.ok(service.list());
+    ResponseEntity<List<OrderDetailResponse>> list() {
+        List<OrderDetailResponse> details = service.list()
+                .stream()
+                .map(OrderDetailResponse::fromEntity)
+                .toList();
+        return ResponseEntity.ok(details);
     }
 
     @PostMapping
-    ResponseEntity<Void> save(@RequestBody OrderDetail orderDetail) {
-        service.save(orderDetail);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    ResponseEntity<OrderDetailResponse> save(@RequestBody OrderDetailRequest request) {
+        OrderDetail saved = service.save(
+                request.getOrderId(),
+                request.getProductId(),
+                request.getQuantity(),
+                request.getUnitPrice()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(OrderDetailResponse.fromEntity(saved));
     }
-
-    // TODO: Exceptions and DTOs
 }

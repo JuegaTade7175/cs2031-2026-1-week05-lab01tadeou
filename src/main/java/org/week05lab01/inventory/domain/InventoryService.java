@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.week05lab01.inventory.infrastructure.InventoryRepository;
 import org.week05lab01.product.domain.Product;
+import org.week05lab01.shared.exception.InsufficientStockException;
+import org.week05lab01.shared.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -35,11 +37,25 @@ public class InventoryService {
     public void reduceStock(Product product, Integer quantity) {
         Inventory inventory = repository.findByProductId(product.getId());
 
+        if (inventory == null) {
+            throw new ResourceNotFoundException(
+                    "No se encontró inventario para el producto con id: " + product.getId()
+            );
+        }
+
+        if (inventory.getStock() < quantity) {
+            throw new InsufficientStockException(
+                    "Stock insuficiente para el producto '" + product.getName() +
+                    "'. Stock disponible: " + inventory.getStock() + ", cantidad solicitada: " + quantity
+            );
+        }
+
         heavyProcess(60000L);
 
-        // TODO: Handle exceptions
         inventory.setStock(inventory.getStock() - quantity);
-
         repository.save(inventory);
+
+        logger.info("Stock reducido correctamente para producto '{}'. Stock restante: {}",
+                product.getName(), inventory.getStock());
     }
 }

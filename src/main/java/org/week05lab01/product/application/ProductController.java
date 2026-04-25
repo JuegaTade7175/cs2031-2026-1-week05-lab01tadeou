@@ -16,18 +16,22 @@ public class ProductController {
     private final ProductService service;
 
     @GetMapping
-    public ResponseEntity<List<Product>> list() {
-        List<Product> products = service.listAll();
-
+    public ResponseEntity<List<ProductResponse>> list() {
+        List<ProductResponse> products = service.listAll()
+                .stream()
+                .map(ProductResponse::fromEntity)
+                .toList();
         return ResponseEntity.ok(products);
     }
 
     @PostMapping
-    public ResponseEntity<Void> save(@RequestBody Product product) {
-        service.save(product);
+    public ResponseEntity<ProductResponse> save(@RequestBody ProductRequest request) {
+        Product product = new Product();
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        Product saved = service.save(product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ProductResponse.fromEntity(saved));
     }
-
-    // TODO: Exceptions and DTOs
 }
